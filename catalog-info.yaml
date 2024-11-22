@@ -2,11 +2,11 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: py-twitter
-    description: |
-      This service provides the entry point to the currency exchange functionalities
+  description: |
+    This service provides the entry point to the currency exchange functionalities
   annotations: 
     github.com/project-slug: MolkoBelen/Py-Twitter
 spec:
-  type: Service
+  type: service
   lifecycle: production
   owner: BICE Connect
