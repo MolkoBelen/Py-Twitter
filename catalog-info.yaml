@@ -1,0 +1,426 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: Py-Twitter
+  description: This service provides the entry point to the currency exchange funcionalities
+  annotations: 
+    github.com/project-slug: MolkoBelen/Py-Twitter
+spec:
+  type: other
+  lifecycle: production
+  owner: belencilla
+  
+servers:
+  - url: https://apidev-connect.bice.cl/api-currency-exchange/v1
+  - url: https://apiqa-connect.bice.cl/api-currency-exchange/v1
+tags:
+  - name: Currency Exchange
+    description: Currency Exchange Endpoints
+
+paths:
+  /currency-exchange-intent:
+    post:
+      tags:
+        - Currency Exchange
+      summary: Currency Exchange Intent
+      description: Creates a currency exchange intent, to obtain an intent to be used on the currency exchange 
+      operationId: createCurrencyExchangeIntent
+      parameters: 
+        - $ref: '#/components/parameters/x_user_id'
+        - $ref: '#/components/parameters/x_sender_id'
+        - $ref: '#/components/parameters/x_sender_ip'
+        - $ref: '#/components/parameters/x_message_id'
+      requestBody:
+        description: Intent creation request payload
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/createIntentRequestBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/createIntentResponseBody"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/400ResponseBody"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/500ResponseBody"
+  
+  /currency-exchange:
+    post:
+      tags:
+        - Currency Exchange
+      summary: Currency Exchange
+      description: Creates a currency exchange
+      operationId: createCurrencyExchange
+      parameters: 
+        - $ref: '#/components/parameters/x_sender_id'
+        - $ref: '#/components/parameters/x_sender_ip'
+        - $ref: '#/components/parameters/x_message_id'
+        - $ref: '#/components/parameters/x_jws_signature'
+      requestBody:
+        description: Currency Exchange creation request payload
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/createCurrencyExchangeRequestBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/createCurrencyExchangeResponseBody"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/400ResponseBody"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/409ResponseBody"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/500ResponseBody"
+
+components:
+  parameters:
+    x_user_id:
+      in: header
+      name: x-user-id
+      schema:
+        type: string
+        description: "User identification number without dots or hyphens (RUT)."
+        minLength: 8
+        maxLength: 10
+        example: "123456785"
+      required: true
+    x_sender_ip:
+      in: header
+      name: x-sender-ip
+      schema:
+        type: string
+        description: "IPv4 of the sender that made the request"
+        maxLength: 15
+        example: "123.123.123.123"
+      required: true
+    x_message_id:
+      in: header
+      name: x-message-id
+      schema:
+        type: string
+        description: "Global unique identifier of the transaction"
+        maxLength: 255
+        example: "rrt-4488388960838348945-d-gea1-3128-123123123-1"
+      required: true
+    x_sender_id:
+      in: header
+      name: x-sender-id
+      schema:
+        type: string
+        description: "Sender identification"
+        maxLength: 255
+        example: "MisterConnect"
+      required: true
+    x_jws_signature:
+      in: header
+      name: x-jws-signature
+      required: true
+      schema:
+        type: string
+      description: 'Detached JWS (RFC 7797) that sign the request payload.'
+  schemas:
+    createIntentRequestBody:
+      type: object
+      required:
+        - target_currency
+        - base_currency
+      properties:
+        target_currency:
+          $ref: "#/components/schemas/targetCurrency"
+        base_currency:
+          type: object
+          required:
+            - code
+          properties:
+            code:
+              type: string
+              description: "Code of the base currency. The one to be used to perform the exchange"
+              example: "CLP"
+              minLength: 3
+              maxLength: 3
+              enum: ["CLP"]
+    
+    createIntentResponseBody:
+      type: object
+      properties:
+        target_currency:
+          $ref: "#/components/schemas/targetCurrency"
+        base_currency:
+          type: object
+          properties:
+            code:
+              type: string
+              description: "Code of the base currency. The one to be used to perform the exchange"
+              example: "CLP"
+              minLength: 3
+              maxLength: 3
+              enum: ["CLP"]
+            exchange_cost:
+              type: number
+              description: "The cost measured by the base currency. It is the total cost to obtain the desired amount of currency"
+              example: 9500.0
+              minimum: 1
+        exchange_rate:
+          type: number
+          description: "The rate of the exchange measured by the base currency. It is the cost to buy 1 unit of the desired currency"
+          example: 950.0
+          minimum: 1
+        intent_id:
+          type: string
+          format: uuidv4
+          minLength: 36
+          maxLength: 36
+          description: "Universal unique ID of the created intent"
+          example: "76d72e3d-9321-464d-86a0-8d24bfe9d343"
+        expires_in:
+          type: integer
+          minimum: 1
+          description: "Expiration time of the intent measured in seconds"
+          example: 120
+    
+    createCurrencyExchangeRequestBody:
+      type: object
+      required:
+        - intent_id
+        - email
+        - debtor_account_identification
+        - creditor_account_identification
+        - description
+        - sender_transaction_id
+      properties:
+        intent_id:
+          type: string
+          format: uuidv4
+          minLength: 36
+          maxLength: 36
+          description: "Universal unique ID of the created intent"
+          example: "76d72e3d-9321-464d-86a0-8d24bfe9d343"
+        email:
+          type: string
+          format: email
+          description: "User email"
+          example: "jhon.doe@mail.com"
+          maxLength: 50
+          minLength: 1
+        debtor_account_identification:
+            type: string
+            description: "BICE account number where the charge is made"
+            maxLength: 11
+            example: "12345678"
+        creditor_account_identification:
+          type: string
+          description: "BICE account number where the deposit is made"
+          maxLength: 11
+          example: "98765432"
+        description:
+          type: string
+          description: "Field available for the user to add a description"
+          example: "Some description"
+          maxLength: 80
+        sender_transaction_id:
+          type: string
+          format: uuidv4
+          description: "Universal unique ID of the sender transaction. This is used for trace and duplicity prevention purposes"
+          minLength: 36
+          maxLength: 36
+          example: "76d72e3d-9321-464d-86a0-8d24bfe9d349"
+        attachments:
+          type: object
+          properties:
+            original_message:
+              type: object
+              properties:
+                signatures:
+                  type: array
+                  description: "Array of signatures. This array has to be used for participants signatures"
+                  items:
+                      type: object
+                      properties:
+                        protected:
+                          type: string
+                          description: "JWS Header"
+                        signature:
+                          type: string
+                          description: "JWS Signature of the signed payload"
+                      required:
+                      - protected
+                      - signature
+              required:
+              - signatures
+          required:
+          - original_message
+
+    createCurrencyExchangeResponseBody:
+      type: object
+      properties:
+        exchange_id:
+          type: string
+          format: uuidv4
+          minLength: 36
+          maxLength: 36
+          description: "Universal unique ID of the currency exchange"
+          example: "76d72e3d-9321-464d-86a0-8d24bfe9d341"
+        sender_transaction_id:
+          type: string
+          format: uuidv4
+          description: "Universal unique ID of the sender transaction. This is used for trace and idempotency purposes"
+          minLength: 36
+          maxLength: 36
+          example: "76d72e3d-9321-464d-86a0-8d24bfe9d349"
+        status:
+          type: string
+          example: "Completed"
+          enum:
+            - Completed
+            - Rejected
+
+    
+    targetCurrency:
+      type: object
+      required:
+        - code
+        - amount
+      properties:
+        code:
+          type: string
+          description: "Code of the target currency. The one to be obtained at the end of the exchange"
+          example: "USD"
+          minLength: 3
+          maxLength: 3
+          enum: ["USD", "EUR"]
+        amount:
+          type: number
+          description: "Amount of the target currency. The one to be obtained at the end of the exchange"
+          example: 10.0
+          minimum: 1
+
+    400ResponseBody:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 400
+          description: "HTTP status code"
+        message:
+          type: string
+          example: "Bad Request"
+          description: "Brief description related with code"
+        error:
+          type: array
+          items:
+            type: object
+            properties:
+              message:
+                type: string
+                description: "Brief description related with error code"
+                example: "base_currency.code must be shorter than or equal to 3 characters"
+              error_code:
+                type: string
+                description: "BICE error code"
+                example: "BICE.Field.Invalid"
+                enum:
+                  - BICE.Field.Invalid
+                  - BICE.Field.InvalidDate
+                  - BICE.Field.Missing
+                  - BICE.Header.Missing
+                  - BICE.Header.Invalid
+                  - BICE.Resource.NotFound
+                  - BICE.Unsupported.Currency
+                  - BICE.Signature.Invalid
+                  - BICE.Signature.InvalidClaim
+                  - BICE.Signature.MissingClaim
+                  - BICE.Signature.Malformed
+                  - BICE.Signature.Missing
+                  - BICE.IntentExpired
+                  - BICE.Rules.LimitExceeded
+                  - BICE.Rules.LegalValidationError
+                  - BICE.CertificateNotAuthorized
+                  - BICE.CertificateInactive
+                  - BICE.CertificateExpired
+    
+    409ResponseBody:
+      description: "Sender transaction already exists"
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 409
+          description: "HTTP response code"
+        message:
+          type: string
+          maxLength: 150
+          example: "Conflict"
+          description: "Brief description related with code"
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              error_code:
+                type: "string"
+                example: "BICE.Rules.ResourceAlreadyExists"
+                description: "Error code"
+                enum:
+                  - BICE.Rules.ResourceAlreadyExists
+              message:
+                type: "string"
+                maxLength: 150
+                example: "sender_transaction_id already exists"
+                description: "Brief description related with error code"
+    
+    500ResponseBody:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 500
+          description: "HTTP status code"
+        message:
+          type: string
+          example: "Internal Server Error"
+          minLength: 0
+          maxLength: 150
+          description: "Brief description related with code"
+        error:
+          type: array
+          items:
+            type: object
+            properties:
+              message:
+                type: string
+                description: "Brief description related with error code"
+                example: "An internal error has occurred."
+              error_code:
+                type: string
+                description: "BICE error code"
+                example: "BICE.UnexpectedError"
+                enum:
+                  - BICE.UnexpectedError
