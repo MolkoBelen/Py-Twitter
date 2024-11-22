@@ -1,8 +1,7 @@
----
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: py twitter
+  name: x
   description: |
     This service provides the entry point to the currency exchange
     functionalities.
