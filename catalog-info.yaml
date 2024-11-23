@@ -12,3 +12,7 @@ spec:
   type: service
   lifecycle: production
   owner: BICE Connect
+  exposes:
+    - kind: OpenAPI
+      spec:
+        url: https://raw.githubusercontent.com/MolkoBelen/Py-Twitter/master/swagger.yaml
