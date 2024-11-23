@@ -7,7 +7,7 @@ metadata:
   annotations:
     github.com/project-slug: MolkoBelen/Py-Twitter
     backstage.io/api-docs: file:./swagger.yaml
-    backstage.io/techdocs-ref: dir:./docs
+    backstage.io/techdocs-ref: url:https://raw.githubusercontent.com/MolkoBelen/Py-Twitter/main/docs/index.md
   system: FX
 spec:
   type: service
