@@ -6,7 +6,6 @@ metadata:
     This service provides the entry point to the currency exchange functionalities.
   annotations:
     github.com/project-slug: MolkoBelen/Py-Twitter
-    backstage.io/api-docs: file:./swagger.yaml
     backstage.io/techdocs-ref: dir:.
   system: FX
 spec:
