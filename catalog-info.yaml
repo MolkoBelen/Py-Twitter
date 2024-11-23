@@ -3,12 +3,11 @@ kind: Component
 metadata:
   name: py-twitter
   description: |
-    This service provides the entry point to the currency exchange
-    functionalities.
+    This service provides the entry point to the currency exchange functionalities.
   annotations:
     github.com/project-slug: MolkoBelen/Py-Twitter
     backstage.io/api-docs: file:./swagger.yaml
-    backstage.io/techdocs-ref: dir:./docs    
+    backstage.io/techdocs-ref: url:https://raw.githubusercontent.com/MolkoBelen/Py-Twitter/master/docs/index.md
   system: FX
 spec:
   type: service
