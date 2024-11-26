@@ -11,7 +11,7 @@ metadata:
 spec:
   type: service
   lifecycle: production
-  owner: BICE Connect
+  owner: bice-connect
   exposes:
     - kind: OpenAPI
       spec:
